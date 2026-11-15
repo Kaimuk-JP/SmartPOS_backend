@@ -13,7 +13,7 @@ API ของระบบขายหน้าร้าน SmartPOS ทำด้
 - โมดูลธุรกิจ: สินค้า หมวดหมู่ ตะกร้า การขาย พักบิล ลูกค้า คูปอง โปรโมชั่น ของรางวัล ข่าว พนักงาน บันทึกการใช้งานพนักงาน สถิติ และการตั้งค่าร้าน
 - ตรวจข้อมูลที่ส่งเข้ามาด้วย DTO กับ ValidationPipe
 - จำกัดจำนวนคำขอด้วย Throttler
-- ตั้ง CORS ให้หน้าเว็บเรียกข้ามโดเมนได้
+- ตั้ง CORS ให้หน้าเว็บเรียกข้ามโดเมนได้ (โดเมนเพิ่มเองได้ด้วย `CORS_ORIGINS`)
 
 รายการ endpoint ทั้งหมดอยู่ใน [API_DOCS.md](API_DOCS.md) ทุก path ขึ้นต้นด้วย `/api`
 
@@ -39,6 +39,8 @@ API ทำงานที่ http://localhost:3001/api (พอร์ตตั้
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_KEY=...        # service role key เก็บฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามใส่ในหน้าเว็บ
 JWT_SECRET=...          # สตริงยาวสุ่มเอง
+PORT=3001               # ไม่ใส่ก็ใช้ 3001
+CORS_ORIGINS=https://pos.bittern-komodo.ts.net   # ไม่บังคับ คั่นหลายโดเมนด้วยจุลภาค
 ```
 
 ไฟล์ `.env` ห้ามขึ้น git
@@ -64,7 +66,7 @@ npm run lint
 
 ## การนำขึ้นใช้งาน
 
-ตัวที่ใช้อยู่ตอนนี้รันบนมือถือ Android (Termux) workflow `.github/workflows/phone-release.yml` จะ build แล้วสร้าง release จากนั้นสั่งมือถือให้ดึงรุ่นใหม่ไปรันเอง ไม่ต้องใช้ Docker ต้องตั้ง secret `TS_AUTHKEY` และ `DEPLOY_TOKEN` ใน repo
+ตัวที่ใช้อยู่ตอนนี้รันบนมือถือ Android (Termux) เปิดให้เข้าได้ที่ https://pos.bittern-komodo.ts.net/ ผ่าน Tailscale Funnel ทุกครั้งที่ push เข้า `main` workflow `.github/workflows/phone-release.yml` จะ build แล้วสร้าง release จากนั้นสั่งมือถือให้ดึงรุ่นใหม่ไปรันเอง (`node_modules` ติดตั้งบนมือถือ เพราะ bcrypt ต้องคอมไพล์สำหรับ Android) ไม่ต้องใช้ Docker ต้องตั้ง secret `TS_AUTHKEY` และ `DEPLOY_TOKEN` ใน repo
 
 ถ้าอยากรันเป็น container มี `Dockerfile` ให้
 
