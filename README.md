@@ -25,37 +25,51 @@ NestJS 11, TypeScript, Supabase JS, @nestjs/jwt, Passport, @nestjs/throttler, Je
 
 ## รันในเครื่อง
 
-ต้องมี Node 20 ขึ้นไป
+ต้องมี Node 20 ขึ้นไป และ Docker (ใช้รันฐานข้อมูลอย่างเดียว ตัว API รันด้วย Node ปกติ)
 
 ```bash
+# 1. สร้างกุญแจสุ่มและไฟล์ .env (ของ backend และของชุดฐานข้อมูล)
+node local/make-env.js
+
+# 2. เปิดฐานข้อมูล PostgreSQL + PostgREST (ครั้งแรกจะสร้างตารางและข้อมูลตัวอย่างให้เอง)
+docker compose --env-file local/.env -f local/docker-compose.yml up -d
+
+# 3. รัน API
 npm install
-cp .env.example .env     # แล้วแก้ค่าในไฟล์
 npm run start:dev
 ```
 
-API ทำงานที่ http://localhost:3001/api (พอร์ตตั้งได้ด้วย `PORT`)
+API ทำงานที่ http://localhost:3001/api เข้าสู่ระบบทดลองด้วย `smartpos` / `123456789`
 
-ค่าใน `.env`:
+ขั้นที่ 1 พิมพ์ค่า 3 บรรทัดสำหรับหน้าเว็บออกมาด้วย ให้ก๊อปไปใส่ไฟล์ `.env.local` ของ [SmartPOS_frontend](https://github.com/Kaimuk-JP/SmartPOS_frontend) แล้วรัน `npm run dev` ที่นั่น เปิด http://localhost:3000
+
+พอร์ตที่ใช้: ฐานข้อมูล 5432 (ฟังเฉพาะเครื่องนี้), PostgREST ผ่าน nginx 8000, API 3001 ถ้าพอร์ตชน ตั้ง `GATEWAY_PORT` หรือ `DB_PORT` ก่อนรันขั้นที่ 1 และ 2
+
+เริ่มฐานข้อมูลใหม่ทั้งหมด: `docker compose --env-file local/.env -f local/docker-compose.yml down -v` แล้วทำขั้นที่ 2 ซ้ำ
+
+### ค่าใน `.env` (ถ้าตั้งเอง)
 
 ```env
-SUPABASE_URL=http://127.0.0.1:3000   # ที่อยู่ PostgREST ของฐานข้อมูล (หรือ https://xxxx.supabase.co ถ้าใช้ Supabase)
+PORT=3001               # ไม่ใส่ก็ใช้ 3001
+SUPABASE_URL=http://127.0.0.1:8000   # ที่อยู่ PostgREST ของฐานข้อมูล (หรือ https://xxxx.supabase.co ถ้าใช้ Supabase)
 SUPABASE_KEY=...        # JWT สิทธิ์ระดับ service ของฐานข้อมูล เก็บฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามใส่ในหน้าเว็บ
 JWT_SECRET=...          # สตริงยาวสุ่มเอง
-PORT=3001               # ไม่ใส่ก็ใช้ 3001
 CORS_ORIGINS=https://pos.bittern-komodo.ts.net   # ไม่บังคับ คั่นหลายโดเมนด้วยจุลภาค
 ```
 
-ไฟล์ `.env` ห้ามขึ้น git
+ไฟล์ `.env` ห้ามขึ้น git (`local/.env` ก็เช่นกัน)
 
 ## ฐานข้อมูล
 
-สคริปต์ SQL อยู่ที่รากของ repo รันตามลำดับนี้ด้วย `psql` (หรือ SQL editor ของ Supabase ถ้าใช้ Supabase):
+ใช้ PostgreSQL ชุดที่ `docker compose` ข้างบนสร้างให้ ไฟล์ที่ถูกโหลดตามลำดับตอนสร้างครั้งแรก:
 
-1. `database_master_setup.sql` สร้างตารางทั้งหมด
-2. `fix_permissions.sql` ตั้งสิทธิ์
-3. `additional_seed_data.sql` ข้อมูลตัวอย่าง (ไม่บังคับ)
+1. `local/db/00-init.sql` สร้าง role ที่ PostgREST ใช้ (`anon`, `authenticated`, `service_role`, `authenticator`)
+2. `database_master_setup.sql` สร้างตารางทั้งหมดและบัญชีทดลอง
+3. `local/db/02-lock-anon.sql` ปิดสิทธิ์ผู้ใช้ที่ยังไม่ล็อกอิน ให้อ่านได้เฉพาะข้อมูลที่หน้าเว็บใช้ตรงๆ
+4. `local/db/03-held-bills-shop-id.sql` เพิ่มคอลัมน์ `shop_id` ของบิลที่พัก
 
-`reset_database.sql` ล้างข้อมูลทั้งหมด ใช้เฉพาะตอนพัฒนา
+ถ้าจะใช้ PostgreSQL ของตัวเองหรือ Supabase: สร้าง role 4 ตัวตามข้อ 1 (Supabase มีให้แล้ว) แล้วรันไฟล์ข้อ 2-4 ด้วย `psql` ส่วน `reset_database.sql` ล้างข้อมูลทั้งหมด ใช้เฉพาะตอนพัฒนา
+`additional_seed_data.sql` คือข้อมูลตัวอย่างเพิ่มเติม (ไม่บังคับ)
 
 ## คำสั่งที่ใช้บ่อย
 
@@ -79,5 +93,6 @@ src/auth/        ล็อกอิน JWT และตรวจสิทธิ�
 src/supabase/    ตัวเชื่อมฐานข้อมูล PostgreSQL
 src/common/      filter และตัวช่วยกลาง
 src/products/ src/sales/ src/customers/ ...   โมดูลละเรื่อง
+local/           ชุดฐานข้อมูลสำหรับรันในเครื่อง (docker compose, SQL เริ่มต้น, ตัวสร้างกุญแจ)
 test/            e2e test
 ```
