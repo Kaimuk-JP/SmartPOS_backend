@@ -1,0 +1,64 @@
+name: Phone Release
+
+# build backend (NestJS) สำหรับเซิร์ฟเวอร์มือถือ (Termux) แล้วปล่อยเป็น GitHub Release
+# มือถือจะดึงไฟล์ backend.tar.gz ไปใช้เองด้วยคำสั่ง pos-update (node_modules ติดตั้งบนมือถือ เพราะ bcrypt ต้องคอมไพล์สำหรับ Android)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: phone-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TS_AUTHKEY: ${{ secrets.TS_AUTHKEY }}
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Package
+        run: |
+          mkdir out
+          cp -r dist package.json package-lock.json out/
+          echo "$GITHUB_SHA" > out/BUILD_SHA
+          tar -C out -czf backend.tar.gz .
+
+      - name: Publish release (เก็บไว้ 5 เวอร์ชันล่าสุด)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="phone-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          gh release create "$TAG" backend.tar.gz --prerelease --target "$GITHUB_SHA" \
+            --title "$TAG" --notes "Phone build of $GITHUB_SHA"
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[].tagName' \
+            | grep '^phone-' | tail -n +6 | xargs -r -I{} gh release delete {} --yes --cleanup-tag
+
+      # ---- สั่งมือถืออัปเดตทันที (ต้องตั้ง secrets TS_AUTHKEY + DEPLOY_TOKEN ก่อน ไม่งั้นข้ามขั้นนี้) ----
+      - name: Join tailnet
+        if: env.TS_AUTHKEY != '' && env.DEPLOY_TOKEN != ''
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TS_AUTHKEY }}
+          hostname: github-actions-smartpos
+
+      - name: Tell phone to update
+        if: env.TS_AUTHKEY != '' && env.DEPLOY_TOKEN != ''
+        run: |
+          curl -fsS --retry 6 --retry-all-errors --retry-delay 5 -X POST             --resolve pos.tailb2a25e.ts.net:443:100.118.183.38             -H "Authorization: Bearer $DEPLOY_TOKEN"             https://pos.tailb2a25e.ts.net/__deploy

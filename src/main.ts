@@ -16,7 +16,9 @@ async function bootstrap() {
         'http://localhost:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3000',
-        'https://smart-pos-frontend-gamma.vercel.app'
+        'https://smart-pos-frontend-gamma.vercel.app',
+        // เพิ่มโดเมนอื่นได้จาก env เช่น CORS_ORIGINS=http://192.168.110.13:8000,https://pos.example.com
+        ...(process.env.CORS_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean),
       ];
 
       const isAllowed = allowedOrigins.includes(origin) ||

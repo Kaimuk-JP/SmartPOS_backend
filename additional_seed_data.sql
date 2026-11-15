@@ -42,7 +42,8 @@ BEGIN
             'SHOP-MLAM4TC6-JHD',
             (SELECT id FROM public.admins LIMIT 1),
             CASE WHEN i % 2 = 0 THEN 'LOGIN' ELSE 'CREATE_SALE' END,
-            '{"ip": "127.0.0.1", "device": "chrome"}'::jsonb
+            CASE WHEN i % 2 = 0 THEN '{"ip": "127.0.0.1", "device": "chrome"}'::jsonb
+                 ELSE jsonb_build_object('billNumber', 'INV-SEED-' || lpad(i::text, 4, '0'), 'total', (50 + i * 17)) END
         );
     END LOOP;
 
