@@ -80,11 +80,27 @@ npm run test         # unit test
 npm run lint
 ```
 
-## การนำขึ้นใช้งาน
+## รันจริงบนคอม
 
-ตัวที่ใช้อยู่ตอนนี้รันบนมือถือ Android (Termux) เปิดให้เข้าได้ที่ https://pos.bittern-komodo.ts.net/ ผ่าน Tailscale Funnel ทุกครั้งที่ push เข้า `main` workflow `.github/workflows/phone-release.yml` จะ build แล้วสร้าง release จากนั้นสั่งมือถือให้ดึงรุ่นใหม่ไปรันเอง (`node_modules` ติดตั้งบนมือถือ เพราะ bcrypt ต้องคอมไพล์สำหรับ Android) ไม่ต้องใช้ Docker ต้องตั้ง secret `TS_AUTHKEY` และ `DEPLOY_TOKEN` ใน repo
+ตั้งค่าบนเครื่องคอมที่จะเป็นเซิร์ฟเวอร์ ใช้ขั้นตอนเดียวกับ "รันในเครื่อง" ด้านบน (ฐานข้อมูลด้วย Docker, API ด้วย Node) แต่รันแบบ production:
 
-ถ้าอยากรันเป็น container มี `Dockerfile` ให้
+```bash
+npm ci
+npm run build
+npm run start:prod
+```
+
+ให้รันค้างไว้และเปิดใหม่เองเมื่อเครื่องรีสตาร์ท ด้วย pm2:
+
+```bash
+npm i -g pm2
+pm2 start dist/main.js --name smartpos-api
+pm2 save
+```
+
+ถ้าให้เครื่องอื่นเข้าถึง: ใส่โดเมนหรือที่อยู่ของหน้าเว็บใน `CORS_ORIGINS` ในไฟล์ `.env` แล้วเปิดพอร์ต 3001 (หรือวางหลัง nginx) เปลี่ยน `JWT_SECRET` และรหัสบัญชีทดลองก่อนใช้งานจริง
+
+ถ้าอยากรันเป็น container มี `Dockerfile` ให้ (build แล้วรัน `dist/main`)
 
 ## โครงสร้างโฟลเดอร์
 
