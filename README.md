@@ -1,59 +1,79 @@
-# 🛠️ Smart POS Cloud - Backend (NestJS)
+# SmartPOS Backend
 
-ระบบหลังบ้าน (API) ประสิทธิภาพสูงสำหรับ Smart POS Cloud พัฒนาด้วย NestJS พร้อมการเชื่อมต่อฐานข้อมูล Supabase และระบบรักษาความปลอดภัยด้วย JWT
+API ของระบบขายหน้าร้าน SmartPOS ทำด้วย NestJS เก็บข้อมูลใน PostgreSQL (ผ่าน Supabase client) และล็อกอินด้วย JWT
+หน้าเว็บอยู่อีก repo: [SmartPOS_frontend](https://github.com/Kaimuk-JP/SmartPOS_frontend)
 
-## 🌟 คุณสมบัติ (Features)
+## ลองใช้งาน
 
-- **RESTful API**: ให้บริการข้อมูลสำหรับระบบ POS ทั้งหมด
-- **Authentication**: ระบบล็อกอินและจัดการสิทธิ์ด้วย JWT (Json Web Token) และ HttpOnly Cookies
-- **Supabase Integration**: เชื่อมต่อฐานข้อมูล PostgreSQL ผ่าน Supabase Client
-- **Security & CORS**: ตั้งค่าความปลอดภัยรองรับการเชื่อมต่อข้ามโดเมน (Vercel)
-- **Validation**: ตรวจสอบความถูกต้องของข้อมูลผ่าน DTO และ ValidationPipe
+เว็บ: https://pos.bittern-komodo.ts.net/
 
-## 🛠 เทคโนโลยีที่ใช้ (Tech Stack)
+## ทำอะไรได้บ้าง
 
-- **Framework**: [NestJS](https://nestjs.com/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Database**: [Supabase (PostgreSQL)](https://supabase.com/)
-- **Authentication**: [@nestjs/jwt](https://docs.nestjs.com/security/authentication), [Passport](https://www.passportjs.org/)
-- **Tools**: Bun (Lockfile), Prettier, ESLint
+- ล็อกอินพนักงานและสมาชิก ออก token เก็บเป็น HttpOnly cookie (รับแบบ `Authorization: Bearer` ได้ด้วย)
+- โมดูลธุรกิจ: สินค้า หมวดหมู่ ตะกร้า การขาย พักบิล ลูกค้า คูปอง โปรโมชั่น ของรางวัล ข่าว พนักงาน บันทึกการใช้งานพนักงาน สถิติ และการตั้งค่าร้าน
+- ตรวจข้อมูลที่ส่งเข้ามาด้วย DTO กับ ValidationPipe
+- จำกัดจำนวนคำขอด้วย Throttler
+- ตั้ง CORS ให้หน้าเว็บเรียกข้ามโดเมนได้
 
-## 🌐 ลิงก์ระบบ (Production Links)
+รายการ endpoint ทั้งหมดอยู่ใน [API_DOCS.md](API_DOCS.md) ทุก path ขึ้นต้นด้วย `/api`
 
-- **API Base URL**: [https://smartpos-backend-7ee9.onrender.com/api](https://smartpos-backend-7ee9.onrender.com/api)
-- **Frontend App**: [https://smart-pos-frontend-gamma.vercel.app/](https://smart-pos-frontend-gamma.vercel.app/)
+## เครื่องมือที่ใช้
 
-## ⚙️ การตั้งค่าระบบ (Environment Variables)
+NestJS 11, TypeScript, Supabase JS, @nestjs/jwt, Passport, @nestjs/throttler, Jest
 
-สร้างไฟล์ `.env` ในโฟลเดอร์ `backend_Nest/smartpos_nest` และกำหนดค่าดังนี้:
+## รันในเครื่อง
 
-```env
-PORT=3001
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_service_role_or_anon_key
-JWT_SECRET=your_secret_key_for_jwt
+ต้องมี Node 20 ขึ้นไป
+
+```bash
+npm install
+cp .env.example .env     # แล้วแก้ค่าในไฟล์
+npm run start:dev
 ```
 
-## 🚀 การรันโปรเจกต์ในเครื่อง (Local Development)
+API ทำงานที่ http://localhost:3001/api (พอร์ตตั้งได้ด้วย `PORT`)
 
-1. ติดตั้ง Dependencies:
-   ```bash
-   npm install
-   ```
+ค่าใน `.env`:
 
-2. รันโหมด Development (Watch Mode):
-   ```bash
-   npm run start:dev
-   ```
+```env
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_KEY=...        # service role key เก็บฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามใส่ในหน้าเว็บ
+JWT_SECRET=...          # สตริงยาวสุ่มเอง
+```
 
-3. API จะทำงานที่: `http://localhost:3001/api`
+ไฟล์ `.env` ห้ามขึ้น git
 
-## 📁 โครงสร้างโปรเจกต์
+## ฐานข้อมูล
 
-- `/src/auth`: ระบบยืนยันตัวตนและการจัดการสิทธิ์
-- `/src/supabase`: บริการเชื่อมต่อกับฐานข้อมูล Supabase
-- `/src/common`: ฟิลเตอร์กรองข้อผิดพลาดและ Utilities ต่างๆ
-- `/src/products, /src/sales, etc.`: โมดูลแยกตามฟังก์ชันธุรกิจ
+สคริปต์ SQL อยู่ที่รากของ repo รันตามลำดับนี้ใน SQL editor ของ Supabase หรือ psql:
 
----
-**Secured by Smart POS Cloud Team**
+1. `database_master_setup.sql` สร้างตารางทั้งหมด
+2. `fix_permissions.sql` ตั้งสิทธิ์
+3. `additional_seed_data.sql` ข้อมูลตัวอย่าง (ไม่บังคับ)
+
+`reset_database.sql` ล้างข้อมูลทั้งหมด ใช้เฉพาะตอนพัฒนา
+
+## คำสั่งที่ใช้บ่อย
+
+```bash
+npm run build        # คอมไพล์เป็น dist/
+npm run start:prod   # รัน dist/main
+npm run test         # unit test
+npm run lint
+```
+
+## การนำขึ้นใช้งาน
+
+ตัวที่ใช้อยู่ตอนนี้รันบนมือถือ Android (Termux) workflow `.github/workflows/phone-release.yml` จะ build แล้วสร้าง release จากนั้นสั่งมือถือให้ดึงรุ่นใหม่ไปรันเอง ไม่ต้องใช้ Docker ต้องตั้ง secret `TS_AUTHKEY` และ `DEPLOY_TOKEN` ใน repo
+
+ถ้าอยากรันเป็น container มี `Dockerfile` ให้
+
+## โครงสร้างโฟลเดอร์
+
+```
+src/auth/        ล็อกอิน JWT และตรวจสิทธิ์
+src/supabase/    ตัวเชื่อมฐานข้อมูล
+src/common/      filter และตัวช่วยกลาง
+src/products/ src/sales/ src/customers/ ...   โมดูลละเรื่อง
+test/            e2e test
+```
