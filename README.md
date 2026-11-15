@@ -1,6 +1,8 @@
 # SmartPOS Backend
 
-API ของระบบขายหน้าร้าน SmartPOS ทำด้วย NestJS เก็บข้อมูลใน PostgreSQL (ผ่าน Supabase client) และล็อกอินด้วย JWT
+API ของระบบขายหน้าร้าน SmartPOS ทำด้วย NestJS เก็บข้อมูลใน **PostgreSQL** และล็อกอินด้วย JWT
+
+โค้ดคุยกับฐานข้อมูลผ่าน `supabase-js` ซึ่งเรียก REST API แบบ PostgREST จึงใช้ได้ทั้ง PostgreSQL ที่ติดตั้งเอง (บนมือถือใช้แบบนี้: PostgreSQL + PostgREST) และ Supabase ที่เป็น PostgreSQL เหมือนกัน
 หน้าเว็บอยู่อีก repo: [SmartPOS_frontend](https://github.com/Kaimuk-JP/SmartPOS_frontend)
 
 ## ลองใช้งาน
@@ -36,8 +38,8 @@ API ทำงานที่ http://localhost:3001/api (พอร์ตตั้
 ค่าใน `.env`:
 
 ```env
-SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_KEY=...        # service role key เก็บฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามใส่ในหน้าเว็บ
+SUPABASE_URL=http://127.0.0.1:3000   # ที่อยู่ PostgREST ของฐานข้อมูล (หรือ https://xxxx.supabase.co ถ้าใช้ Supabase)
+SUPABASE_KEY=...        # JWT สิทธิ์ระดับ service ของฐานข้อมูล เก็บฝั่งเซิร์ฟเวอร์เท่านั้น ห้ามใส่ในหน้าเว็บ
 JWT_SECRET=...          # สตริงยาวสุ่มเอง
 PORT=3001               # ไม่ใส่ก็ใช้ 3001
 CORS_ORIGINS=https://pos.bittern-komodo.ts.net   # ไม่บังคับ คั่นหลายโดเมนด้วยจุลภาค
@@ -47,7 +49,7 @@ CORS_ORIGINS=https://pos.bittern-komodo.ts.net   # ไม่บังคับ �
 
 ## ฐานข้อมูล
 
-สคริปต์ SQL อยู่ที่รากของ repo รันตามลำดับนี้ใน SQL editor ของ Supabase หรือ psql:
+สคริปต์ SQL อยู่ที่รากของ repo รันตามลำดับนี้ด้วย `psql` (หรือ SQL editor ของ Supabase ถ้าใช้ Supabase):
 
 1. `database_master_setup.sql` สร้างตารางทั้งหมด
 2. `fix_permissions.sql` ตั้งสิทธิ์
@@ -74,7 +76,7 @@ npm run lint
 
 ```
 src/auth/        ล็อกอิน JWT และตรวจสิทธิ์
-src/supabase/    ตัวเชื่อมฐานข้อมูล
+src/supabase/    ตัวเชื่อมฐานข้อมูล PostgreSQL
 src/common/      filter และตัวช่วยกลาง
 src/products/ src/sales/ src/customers/ ...   โมดูลละเรื่อง
 test/            e2e test
