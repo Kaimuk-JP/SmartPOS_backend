@@ -495,6 +495,9 @@ CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
 CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images(product_id);
 CREATE INDEX IF NOT EXISTS idx_sales_bill_number ON sales(bill_number);
 CREATE INDEX IF NOT EXISTS idx_sales_customer_id ON sales(customer_id);
+CREATE INDEX IF NOT EXISTS idx_sales_created_at ON sales(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sales_staff_id ON sales(staff_id);
+CREATE INDEX IF NOT EXISTS idx_sale_items_sale_id ON sale_items(sale_id);
 CREATE INDEX IF NOT EXISTS idx_promotions_shop_id ON promotions(shop_id);
 
 -- 6. PERMISSIONS & SECURITY (CRITICAL CORRECTION)

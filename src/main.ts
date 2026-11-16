@@ -6,6 +6,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // อยู่หลัง nginx บนเครื่องเดียวกัน: เชื่อ X-Forwarded-For จาก loopback เท่านั้น เพื่อให้ req.ip เป็น IP จริงของผู้ใช้
+  // (ไม่งั้นทุกคนมี IP เป็น 127.0.0.1 และใช้โควตา Throttler ร่วมกัน)
+  app.getHttpAdapter().getInstance().set('trust proxy', 'loopback');
+
   // Enable CORS
   app.enableCors({
     origin: (origin, callback) => {
