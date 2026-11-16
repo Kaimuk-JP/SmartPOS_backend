@@ -13,6 +13,7 @@ import {
 import { SalesService } from './sales.service';
 import { CreateSaleDto, UpdateSaleDto } from './dto/sale.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { StaffOrMemberGuard } from '../auth/guards/staff-or-member.guard';
 import { Req, UseGuards } from '@nestjs/common';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -50,6 +51,7 @@ export class SalesController {
 
     // Public endpoint for members to view their purchase history
     @Get('customer/:customerId')
+    @UseGuards(StaffOrMemberGuard)   // พนักงาน หรือสมาชิกที่ดูประวัติของตัวเอง
     async findByCustomer(@Param('customerId') customerId: string) {
         // Member viewing their own history - maybe no shop restriction or filtered by Member's context if needed
         // But for now, let's keep it open or assume Member app handles it.
@@ -105,6 +107,7 @@ export class SalesController {
     }
 
     @Get(':id')
+    @UseGuards(JwtAuthGuard)   // เฉพาะพนักงาน: บิลมีข้อมูลลูกค้า
     async findOne(@Param('id') id: string) {
         const sale = await this.salesService.findOne(+id);
         if (!sale) {
@@ -114,6 +117,7 @@ export class SalesController {
     }
 
     @Get('bill/:billNumber')
+    @UseGuards(JwtAuthGuard)   // เฉพาะพนักงาน
     async findByBillNumber(@Param('billNumber') billNumber: string) {
         const sale = await this.salesService.findByBillNumber(billNumber);
         if (!sale) {

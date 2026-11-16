@@ -18,6 +18,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import { StaffOrMemberGuard } from '../auth/guards/staff-or-member.guard';
+import { signMemberToken } from '../auth/member-token';
+import { Throttle } from '@nestjs/throttler';
 import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('customers')
@@ -42,6 +45,7 @@ export class CustomersController {
     }
 
     @Get(':id')
+    @UseGuards(StaffOrMemberGuard)   // พนักงาน หรือสมาชิกที่ดูข้อมูลตัวเอง
     async findOne(@Param('id') id: string) {
         // ... (unchanged)
         const customer = await this.customersService.findOne(+id);
@@ -50,6 +54,7 @@ export class CustomersController {
     }
 
     @Get('phone/:phone')
+    @UseGuards(JwtAuthGuard)   // เฉพาะพนักงาน (ค้นลูกค้าจากเบอร์)
     async findByPhone(@Param('phone') phone: string) {
         // ... (unchanged)
         const customer = await this.customersService.findByPhone(phone);
@@ -58,11 +63,12 @@ export class CustomersController {
     }
 
     @Post('login')
+    @Throttle({ default: { limit: 8, ttl: 60000 } })   // กันเดาเบอร์+วันเกิด
     async login(@Body() body: MemberLoginDto) {
         // ... (unchanged)
         const customer = await this.customersService.login(body.phone, body.birthday);
         if (!customer) throw new HttpException('ข้อมูลไม่ถูกต้อง', HttpStatus.UNAUTHORIZED);
-        return customer;
+        return { ...customer, memberToken: signMemberToken(Number((customer as any).id), (customer as any).shopId) };
     }
 
     @Post()

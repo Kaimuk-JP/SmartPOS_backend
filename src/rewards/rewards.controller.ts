@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpSta
 import { RewardsService } from './rewards.service';
 import { CreateRewardDto, UpdateRewardDto, RedeemRewardDto } from './dto/reward.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { StaffOrMemberGuard } from '../auth/guards/staff-or-member.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -75,7 +76,7 @@ export class RewardsController {
     }
 
     @Get('redemptions/:customerId')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(StaffOrMemberGuard)   // พนักงาน หรือสมาชิกที่ดูประวัติแลกของตัวเอง
     getRedemptions(@Param('customerId') customerId: string) {
         return this.rewardsService.getRedemptionsByCustomer(+customerId);
     }

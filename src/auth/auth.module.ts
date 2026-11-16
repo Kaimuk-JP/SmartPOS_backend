@@ -16,7 +16,7 @@ import { JwtStrategy } from './jwt.strategy';
             imports: [ConfigModule],
             inject: [ConfigService],
             useFactory: async (configService: ConfigService) => ({
-                secret: configService.get<string>('JWT_SECRET') || 'secretKey',
+                secret: (() => { const s = configService.get<string>('JWT_SECRET'); if (!s) throw new Error('JWT_SECRET is required'); return s; })(),
                 signOptions: { expiresIn: '7d' },
             }),
         }),
